@@ -18,7 +18,7 @@ $(function () {setTimeout(function () {
 		names[name] = value;
 		localStorage.tempWindowNames = JSON.stringify(names);
 	};
-/*	var makeSortable = function () {
+	var makeSortable = function () {
 		$(".tabs").sortable({
 			placeholder: 'tabplaceholder',
 			forcePlaceholderSize: true,
@@ -168,7 +168,7 @@ $(function () {setTimeout(function () {
 				});
 			}
 		});
-	};*/
+	};
 	chrome.windows.getAll({populate: true}, function (windows) {
 		windows.forEach(function (curWindow) {
 			if (getWindowName('winl'+curWindow.id) === undefined)
@@ -184,7 +184,7 @@ $(function () {setTimeout(function () {
 			winString += '</div></fieldset>';
 			$('#current').append(winString);
 		});
-//		makeSortable();
+		makeSortable();
 		updateScroll();
 	});
 
@@ -236,31 +236,15 @@ $(function () {setTimeout(function () {
 	$(document).on('click', '.windowsave', function (e) {
 		var windowId = parseInt($(this).parent().parent().attr('id').substring(4),10);
 		var img = this;
-		$(img).attr('src','images/arrow_refresh.png').removeClass('windowsave');
-		chrome.tabs.getAllInWindow(windowId, function (tabs) {
-			var data = {};
-			if (getWindowName('winl'+windowId) == 'Click to name') {
-				var date = new Date();
-				var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-				data.name = months[date.getMonth()]+' '+date.getDate()+', '+date.getFullYear()+' - '+date.toLocaleTimeString();
+		var overwrite = false;
+		$.get('https://chrometabcloud.appspot.com/tabcloud', function (data) {
+			overwrite = data.windows.some(function(curWindow){return (getWindowName('winl'+windowId)==curWindow.name);});
+			if(data.windows.length == 0||overwrite == false){
+				saveWindow(img,windowId);	
 			} else {
-				data.name = getWindowName('winl'+windowId);
+				$(img).parent().html('<span class="confirm">Overwrite: <img class="windowreallyoverwrite" title="Overwrite window" src="images/disk_overwrite.png" /></span>');
 			}
-			data.tabs = [];
-			tabs.forEach(function (tab) {
-				data.tabs.push({
-					url: tab.url,
-					title: tab.title,
-					favicon: (tab.favIconUrl != '' && tab.favIconUrl !== undefined) ? tab.favIconUrl : '',
-					pinned: (tab.pinned) ? true : false
-				});
-			});
-			$.post('https://chrometabcloud.appspot.com/add', {window: JSON.stringify(data)}, function () { 
-				$(img).attr('src','images/accept.png');
-				$(img).attr('title','Window saved');
-				updateTabs();
-			});
-		});
+		}, 'json');
 	});
 	
 	
@@ -290,7 +274,28 @@ $(function () {setTimeout(function () {
 			updateTabs();
 		});
 	});
-	
+
+	$(document).on('click', '.windowreallyoverwrite', function (e) {
+		var newWindowId = parseInt($(this).parent().parent().parent().attr('id').substring(4),10);
+		var oldWindowId = -1;
+		var img = this;
+		$(img).attr('src','images/arrow_refresh.png');
+		$.get('https://chrometabcloud.appspot.com/tabcloud', function (data) {
+			var i = 0;
+			data.windows.forEach(function(curWindow){
+				if(getWindowName('winl'+newWindowId)==curWindow.name){
+					oldWindowId = i;
+				}
+				i++
+			});
+			$.post('https://chrometabcloud.appspot.com/remove', {window: oldWindowId}, function () {
+				$(img).parent().parent().html('<img class="windowclose" src="images/delete.png" title="Close window"><img class="windowsave" src="images/disk.png" title="Save window">');
+				saveWindow(img,newWindowId);
+			});	
+		}, 'json');
+	});
+
+
 	$(document).on('click', '.windowclose', function (e) {
 		if (localStorage.deleteconfirm === 'yes') {
 			$(this).parent().html('<span class="confirm">Confirm: <img class="windowreallyclose" title="Close window" src="images/delete.png" /></span>');
@@ -307,8 +312,37 @@ $(function () {setTimeout(function () {
 		$(this).parent().parent().parent().remove()
 	});
 	
+	var saveWindow = function(img, windowId){
+		$(img).attr('src','images/arrow_refresh.png').removeClass('windowsave');
+		chrome.tabs.getAllInWindow(windowId, function (tabs) {
+			var data = {};
+			if (getWindowName('winl'+windowId) == 'Click to name') {
+				var date = new Date();
+				var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+				data.name = months[date.getMonth()]+' '+date.getDate()+', '+date.getFullYear()+' - '+date.toLocaleTimeString();
+			} else {
+				data.name = getWindowName('winl'+windowId);
+			}
+			data.tabs = [];
+			tabs.forEach(function (tab) {
+				data.tabs.push({
+					url: tab.url,
+					title: tab.title,
+					favicon: (tab.favIconUrl != '' && tab.favIconUrl !== undefined) ? tab.favIconUrl : '',
+					pinned: (tab.pinned) ? true : false
+				});
+			});
+			$.post('https://chrometabcloud.appspot.com/add', {window: JSON.stringify(data)}, function () { 
+				$(img).attr('src','images/accept.png');
+				$(img).attr('title','Window saved');
+				updateTabs();
+				$(img).attr('src','images/disk.png').addClass('windowsave');
+			});
+		});
+	}
+
 	var setInfo = function (info) {
-		$('#saved').html('<div class="info">'+info+'</div>');
+		$('#saved').html('<div class="infobox">'+info+'</div>');
 		updateScroll();
 	}
 	
@@ -336,7 +370,7 @@ $(function () {setTimeout(function () {
 							$('#saved').append(winString);
 							i++;
 						});
-//						makeSortable();
+						makeSortable();
 						updateScroll();
 					}
 				} else {

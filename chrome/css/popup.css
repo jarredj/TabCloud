@@ -12,10 +12,10 @@
 	opacity: 0.6;
 }
 html {
-	height: 190px;
+	height: 152px;
 }
 body {
-	height: 190px;
+	height: 152px;
 	font-size: 0.9em;
 	font-family: sans-serif;
 }
@@ -53,6 +53,19 @@ body {
 	height: 24px;
 	font-size: 0.7em;
 }
+
+.infobox {
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	margin: 10px 5px; 
+	text-align: center;
+	padding-top: 12px; 
+	float:left;
+	width: 287px; 
+	height: 24px;
+	font-size: 0.7em;
+}
+
 #trash {
 	border: 1px solid #ccc; 
 	border-radius: 5px;
@@ -61,7 +74,7 @@ body {
 	float: left; 
 	height: 18px; 
 	width: 18px; 
-	background: url(images/bin_empty.png) no-repeat 50% 50%; 
+	background: url(../images/bin_empty.png) no-repeat 50% 50%; 
 }
 .tips {
 	margin: 0px;
