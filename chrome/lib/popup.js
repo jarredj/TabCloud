@@ -375,7 +375,7 @@ $(function () {setTimeout(function () {
 					}
 				} else {
 					if (triedAutoLogin === true) {
-						setInfo('Login to load your saved windows<br /><a target="_blank" href="https://chrometabcloud.appspot.com/login">Login</a>');
+						setInfo('Login to load your saved windows. <a target="_blank" href="https://chrometabcloud.appspot.com/login">Login</a>');
 					} else {
 						setInfo('Attempting automatic login...<iframe style="height: 1px; width: 1px; opacity: 0; position: absolute" src="https://chrometabcloud.appspot.com/login"></iframe>');
 						setTimeout(function () {
