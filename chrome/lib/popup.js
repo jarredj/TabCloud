@@ -188,7 +188,7 @@ $(function () {setTimeout(function () {
 		updateScroll();
 	});
 
-	$('.tabimg').on('mouseup', function (e) {
+	$(document).on('mouseup', '.tabimg', function (e) {
 		if (e.button === 1 || (e.button === 0 && e.ctrlKey === true)) {
 			chrome.tabs.create({
 				url: $(this).attr('url'),
