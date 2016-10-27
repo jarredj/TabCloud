@@ -250,7 +250,15 @@ $(function () {setTimeout(function () {
 	
 	$(document).on('click', '.windowopen', function (e) {
 		var windowId = parseInt($(this).parent().parent().attr('id').substring(4),10);
-		chrome.extension.sendRequest({tabs: TCWindows[windowId].tabs});
+        win = TCWindows[windowId]
+        params = {
+                tabs: win.tabs,
+                width: win.width,
+                height: win.height,
+                top: win.top,
+                left: win.left
+        }
+        chrome.extension.sendRequest(params);
 	});
 	
 	$(document).on('click', '.windowdelete', function (e) {
@@ -311,11 +319,11 @@ $(function () {setTimeout(function () {
 		chrome.windows.remove(windowId);
 		$(this).parent().parent().parent().remove()
 	});
-	
+
 	var saveWindow = function(img, windowId){
 		$(img).attr('src','images/arrow_refresh.png').removeClass('windowsave');
 		chrome.tabs.getAllInWindow(windowId, function (tabs) {
-			var data = {};
+			data = {};
 			if (getWindowName('winl'+windowId) == 'Click to name') {
 				var date = new Date();
 				var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -324,19 +332,46 @@ $(function () {setTimeout(function () {
 				data.name = getWindowName('winl'+windowId);
 			}
 			data.tabs = [];
-			tabs.forEach(function (tab) {
-				data.tabs.push({
-					url: tab.url,
-					title: tab.title,
-					favicon: (tab.favIconUrl != '' && tab.favIconUrl !== undefined) ? tab.favIconUrl : '',
-					pinned: (tab.pinned) ? true : false
+			windowCounter = 0;
+			submitWindowData = function (data, img) {
+				console.log(data);
+				$.post('https://chrometabcloud.appspot.com/add', {window: JSON.stringify(data)}, function () { 
+					$(img).attr('src','images/accept.png');
+					$(img).attr('title','Window saved');
+					updateTabs();
+					$(img).attr('src','images/disk.png').addClass('windowsave');
 				});
-			});
-			$.post('https://chrometabcloud.appspot.com/add', {window: JSON.stringify(data)}, function () { 
-				$(img).attr('src','images/accept.png');
-				$(img).attr('title','Window saved');
-				updateTabs();
-				$(img).attr('src','images/disk.png').addClass('windowsave');
+			}
+			tabs.forEach(function (tab) {
+				if (windowCounter == 0) {
+			        chrome.windows.get(tab.windowId, {}, function (window) {
+			        	data['width'] = window.width
+			        	data['height'] = window.height
+			        	data['top'] = window.top
+			        	data['left'] = window.left
+			        	data.tabs.push({
+							url: tab.url,
+							title: tab.title,
+							favicon: (tab.favIconUrl != '' && tab.favIconUrl !== undefined) ? tab.favIconUrl : '',
+							pinned: (tab.pinned) ? true : false
+						});
+						windowCounter++;
+			        	if (windowCounter == tabs.length) {
+			        		submitWindowData(data, img)
+			        	}
+			        });
+				} else {
+					data.tabs.push({
+						url: tab.url,
+						title: tab.title,
+						favicon: (tab.favIconUrl != '' && tab.favIconUrl !== undefined) ? tab.favIconUrl : '',
+						pinned: (tab.pinned) ? true : false
+					});
+					windowCounter++;
+					if (windowCounter == tabs.length) {
+		        		submitWindowData(data, img)
+		        	}
+				}
 			});
 		});
 	}
