@@ -1,10 +1,20 @@
 $(function () {setTimeout(function () {
 	// Protect against XSRF attacks
-	jQuery.ajaxSetup({
-		'beforeSend': function(xhr) {
-			xhr.setRequestHeader('X-XSRF-Protection', 'true');
-		}
-	})
+	// jQuery.ajaxSetup({
+	// 	'beforeSend': function(xhr) {
+	// 		xhr.setRequestHeader('X-XSRF-Protection', 'true');
+	// 	}
+	// })
+    
+    jQuery.ajaxSetup({
+        'beforeSend': function(xhr) {
+            // xhr.setRequestHeader('X-XSRF-Protection', 'true');
+            if (localStorage.token) {
+            	xhr.setRequestHeader('Authorization', 'Token ' + localStorage.token)	
+            }
+        }
+    });
+    
 	
 	var getWindowName = function (name) {
 		var names = JSON.parse(localStorage.tempWindowNames)
@@ -39,7 +49,8 @@ $(function () {setTimeout(function () {
 						data.tabs.splice(tab.substring(7),1);
 						data.name = getWindowName(oldWindow);
 						// Send new array
-						$.post('https://chrometabcloud.appspot.com/update', {window: JSON.stringify(data), windowId: oldWindow.substring(4)});
+						// $.post('https://chrometabcloud.appspot.com/update', {window: JSON.stringify(data), windowId: oldWindow.substring(4)});
+						$.post('http://localhost:8000/api/v1/update', {data: JSON.stringify(data), name: oldWindow.substring(4)});
 					}
 					$(ui.item[0]).detach();
 				} else {
@@ -70,7 +81,8 @@ $(function () {setTimeout(function () {
 						});
 						data.name = getWindowName(newWindow);
 						// Send new array
-						$.post('https://chrometabcloud.appspot.com/update', {window: JSON.stringify(data), windowId: newWindow.substring(4)});
+						$.post('http://localhost:8000/api/v1/update', {data: JSON.stringify(data), name: newWindow.substring(4)});
+						// $.post('https://chrometabcloud.appspot.com/update', {window: JSON.stringify(data), windowId: newWindow.substring(4)});
 						
 						// Remove from local
 						chrome.tabs.remove(parseInt(tab.substring(7),10));
@@ -101,7 +113,8 @@ $(function () {setTimeout(function () {
 						data.tabs.splice(tab.substring(7),1);
 						data.name = getWindowName(oldWindow);
 						// Send new array
-						$.post('https://chrometabcloud.appspot.com/update', {window: JSON.stringify(data), windowId: oldWindow.substring(4)});
+						$.post('http://localhost:8000/api/v1/update', {data: JSON.stringify(data), name: oldWindow.substring(4)});
+						// $.post('https://chrometabcloud.appspot.com/update', {window: JSON.stringify(data), windowId: oldWindow.substring(4)});
 						
 						// Update image
 						$($(ui.item[0]).children()[0]).attr('windowid', newWindow);
@@ -127,14 +140,17 @@ $(function () {setTimeout(function () {
 							});
 							data.name = getWindowName(newWindow);
 							// Send new array
-							$.post('https://chrometabcloud.appspot.com/update', {window: JSON.stringify(data), windowId: newWindow.substring(4)});
+							$.post('http://localhost:8000/api/v1/update', {data: JSON.stringify(data), name: newWindow.substring(4)});
+							// $.post('https://chrometabcloud.appspot.com/update', {window: JSON.stringify(data), windowId: newWindow.substring(4)});
 							// Remove from 2nd
 							// Remove from array
 							var data = TCWindows[oldWindow.substring(4)];
 							data.tabs.splice(tab.substring(7),1);
 							data.name = getWindowName(oldWindow);
 							// Send new array
-							$.post('https://chrometabcloud.appspot.com/update', {window: JSON.stringify(data), windowId: oldWindow.substring(4)});
+							$.post('http://localhost:8000/api/v1/update', {data: JSON.stringify(data), name: oldWindow.substring(4)});
+							// $.post('https://chrometabcloud.appspot.com/update', {window: JSON.stringify(data), windowId: oldWindow.substring(4)});
+
 							// Update image
 							$($(ui.item[0]).children()[0]).attr('windowid', newWindow);
 							
@@ -156,18 +172,18 @@ $(function () {setTimeout(function () {
 				}
 			}
 		});
-		$("#saved").sortable({
-			revert: 100,
-			axis: 'y',
-			distance: 5,
-			containment: 'parent',
-			tolerance: 'pointer',
-			update: function (e, ui) {
-				$.post('https://chrometabcloud.appspot.com/move', { oldIndex: parseInt(ui.item[0].id.substring(4),10), newIndex: $('#saved > fieldset').index($(ui.item[0]))}, function () {
-					updateTabs();
-				});
-			}
-		});
+		// $("#saved").sortable({
+		// 	revert: 100,
+		// 	axis: 'y',
+		// 	distance: 5,
+		// 	containment: 'parent',
+		// 	tolerance: 'pointer',
+		// 	update: function (e, ui) {
+		// 		// $.post('https://chrometabcloud.appspot.com/move', { oldIndex: parseInt(ui.item[0].id.substring(4),10), newIndex: $('#saved > fieldset').index($(ui.item[0]))}, function () {
+		// 		// 	updateTabs();
+		// 		// });
+		// 	}
+		// });
 	};
 	chrome.windows.getAll({populate: true}, function (windows) {
 		windows.forEach(function (curWindow) {
@@ -220,7 +236,8 @@ $(function () {setTimeout(function () {
 		if (windowId.substring(3,4) == 'r') {
 			var data = TCWindows[windowId.substring(4)];
 			data.name = getWindowName(windowId);
-			$.post('https://chrometabcloud.appspot.com/update', {window: JSON.stringify(data), windowId: windowId.substring(4)});
+			$.post('http://localhost:8000/api/v1/update', {data: JSON.stringify(data), name: windowId.substring(4)});
+			// $.post('https://chrometabcloud.appspot.com/update', {window: JSON.stringify(data), windowId: windowId.substring(4)});
 		}
 	});
 	
@@ -237,9 +254,9 @@ $(function () {setTimeout(function () {
 		var windowId = parseInt($(this).parent().parent().attr('id').substring(4),10);
 		var img = this;
 		var overwrite = false;
-		$.get('https://chrometabcloud.appspot.com/tabcloud', function (data) {
-			overwrite = data.windows.some(function(curWindow){return (getWindowName('winl'+windowId)==curWindow.name);});
-			if(data.windows.length == 0||overwrite == false){
+		$.get('http://localhost:8000/api/v1/anydata/', function (data) {
+			overwrite = data.some(function(curWindow){ return (getWindowName('winl'+windowId) == curWindow.name); });
+			if(data.length == 0 || overwrite == false) {
 				saveWindow(img,windowId);	
 			} else {
 				$(img).parent().html('<span class="confirm">Overwrite: <img class="windowreallyoverwrite" title="Overwrite window" src="images/disk_overwrite.png" /></span>');
@@ -334,8 +351,7 @@ $(function () {setTimeout(function () {
 			data.tabs = [];
 			windowCounter = 0;
 			submitWindowData = function (data, img) {
-				console.log(data);
-				$.post('https://chrometabcloud.appspot.com/add', {window: JSON.stringify(data)}, function () { 
+				$.post('http://localhost:8000/api/v1/anydata/', {data: JSON.stringify(data), name: data.name }, function () { 
 					$(img).attr('src','images/accept.png');
 					$(img).attr('title','Window saved');
 					updateTabs();
@@ -384,47 +400,56 @@ $(function () {setTimeout(function () {
 	var TCWindows = [];
 	var updateTabs = function (triedAutoLogin) {
 		setInfo('Loading...');
-		$.get('https://chrometabcloud.appspot.com/tabcloud', function (data) {
-			if (data.status !== undefined) {
-				if (data.status == 'loggedin') {
-					if (data.windows.length == 0) {
-						setInfo('You haven\'t saved any windows yet!');	
-					} else {
-						$('#saved').html("");
-						TCWindows = data.windows;
-						var i = 0;
-						data.windows.forEach(function (curWindow) {
-							setWindowName('winr'+i,curWindow.name);
-							var winString = '<fieldset class="window" id="winr'+i+'"><legend class="windowname">'+curWindow.name+'</legend><span class="right"><img class="windowdelete" src="images/delete.png" title="Delete window"><img class="windowopen" src="images/add.png" title="Open window"></span><div class="tabs">';
-							var ti = 0;
-							curWindow.tabs.forEach(function (curTab) {
-								var favicon = (curTab.favicon != '' && curTab.favicon !== undefined && curTab.favicon.indexOf("chrome://theme")) ? curTab.favicon : 'chrome://favicon/'+curTab.url;
-								winString += '<div style="float: left"><img id="tabimgr'+(ti++)+'" windowid="winr'+i+'" class="tabimg" src="'+favicon+'" url="'+curTab.url+'" title="'+curTab.title.replace(/\"/g,"'")+'" /></div>';
-							});
-							winString += '</div></fieldset>';
-							$('#saved').append(winString);
-							i++;
-						});
-						makeSortable();
-						updateScroll();
-					}
+		$.get('http://localhost:8000/api/v1/anydata/', function (data, textStatus, xhr) {
+			if (xhr.status == 200) {
+				if (data.length == 0) {
+					setInfo('You haven\'t saved any windows yet!');	
 				} else {
-					if (triedAutoLogin === true) {
-						setInfo('Login to load your saved windows. <a target="_blank" href="https://chrometabcloud.appspot.com/login">Login</a>');
-					} else {
-						setInfo('Attempting automatic login...<iframe style="height: 1px; width: 1px; opacity: 0; position: absolute" src="https://chrometabcloud.appspot.com/login"></iframe>');
-						setTimeout(function () {
-							updateTabs(true);
-						}, 1000);
-					}
+					$('#saved').html("");
+					TCWindows = data;
+					var i = 0;
+					data.forEach(function (curWindow) {
+						setWindowName('winr'+i,curWindow.name);
+						var winString = '<fieldset class="window" id="winr'+i+'"><legend class="windowname">'+curWindow.name+'</legend><span class="right"><img class="windowdelete" src="images/delete.png" title="Delete window"><img class="windowopen" src="images/add.png" title="Open window"></span><div class="tabs">';
+						var ti = 0;
+						curWindowData = JSON.parse(curWindow.data)
+						curWindowData.tabs.forEach(function (curTab) {
+							var favicon = (curTab.favicon != '' && curTab.favicon !== undefined && curTab.favicon.indexOf("chrome://theme")) ? curTab.favicon : 'chrome://favicon/'+curTab.url;
+							winString += '<div style="float: left"><img id="tabimgr'+(ti++)+'" windowid="winr'+i+'" class="tabimg" src="'+favicon+'" url="'+curTab.url+'" title="'+curTab.title.replace(/\"/g,"'")+'" /></div>';
+						});
+						winString += '</div></fieldset>';
+						$('#saved').append(winString);
+						i++;
+					});
+					makeSortable();
+					updateScroll();
 				}
+			} else if (xhr.status == 401) {
+				showLoginForm();
 			} else {
 				setInfo('Server error, try again later.');
 			}
-		}, 'json');
+		}, 'json').fail(function () {
+			localStorage.removeItem('token');
+			showLoginForm();
+		});
 	}
 	setTimeout(updateTabs, 0);
 	
+	var showLoginForm = function () {
+		setInfo('Login to load your saved windows. <br /><form id="login_form"><input id="login_username"/><br /><input type="password" id="login_password"/><br /><input type="submit" id="login_submit" value="Login"></form>');
+		$("#login_form").on("submit", function () {
+			username = $("#login_username").val()
+			password = $("#login_password").val()
+			$.post("http://localhost:8000/api/v1/login", {username: username, password: password}, function (data, textStatus, xhr) {
+				if (data.token) {
+					localStorage.token = data.token;
+				}
+				updateTabs();
+			});
+			return false;
+		});
+	}
 	// Extra links
 	
 	$('#optionslink').click(function (e) {
@@ -434,9 +459,7 @@ $(function () {setTimeout(function () {
 	});				
 	
 	$('#logoutlink').click(function (e) {
-		chrome.tabs.create({
-			url: 'https://chrometabcloud.appspot.com/logout'
-		});
+		localStorage.removeItem('token');
 	});		
 	
 	// Tips
