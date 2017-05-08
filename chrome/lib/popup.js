@@ -418,7 +418,7 @@ $(function () {setTimeout(function () {
 		axis: 'y'
 	});
 	var updateScroll = function () {
-		$('.viewport').height(Math.min($('.overview').height(), 350));
+		$('.viewport').height(Math.min($('.overview').height(), 500));
 		scroll.update();
 	}
 	updateScroll();
